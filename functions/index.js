@@ -23,6 +23,7 @@
 
 const _ = require('lodash');
 const bugsnag = require('./bugsnag.js');
+const slack = require('./slack.js');
 require('dotenv').config();
 
 const filters = {
@@ -49,10 +50,20 @@ bugsnag.errors(process.env.PROJECT_ID, filters)
     const userGroups = _.groupBy(details, (detail) => detail.user.name);
     const versionGroups = _.groupBy(details, (detail) => detail.app.version);
 
-    for (const key in userGroups) {
-      console.log(`${key}: ${userGroups[key].length}`);
-    }
-    for (const key in versionGroups) {
-      console.log(`ver ${key}: ${versionGroups[key].length}`);
-    }
+    userGroups['ほげレストラン'] = [1, 2, 3, 4, 5, 6, 7];
+    userGroups['居酒屋ぽめ太郎'] = [1, 2, 3, 4, 5];
+
+    const users = _.sortBy(_.keys(userGroups), (user) => userGroups[user].length)
+      .reverse()
+      .map((user) => `${user}: ${userGroups[user].length}`)
+      .join('\n');
+    slack.send(`*Crashes by users* \`\`\`${users}\`\`\``);
+
+    versionGroups['13.0'] = [1, 2, 3, 4, 5, 6, 7];
+    versionGroups['14.0'] = [1, 2, 3, 4, 5];
+    const versions = _.sortBy(_.keys(versionGroups), (ver) => parseFloat(ver))
+      .reverse()
+      .map((ver) => `${ver}: ${versionGroups[ver].length}`)
+      .join('\n');
+    slack.send(`*Crashes by versions* \`\`\`${versions}\`\`\``);
   });
