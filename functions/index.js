@@ -22,10 +22,10 @@
 'use strict';
 
 const _ = require('lodash');
-const api = require('./bugsnag.js');
+const bugsnag = require('./bugsnag.js');
 require('dotenv').config();
 
-const filterParams = {
+const filters = {
   'filters[event.since][][type]': 'eq',
   'filters[event.since][][value]': '2d',
   'filters[error.status][][type]': 'eq',
@@ -36,13 +36,13 @@ const filterParams = {
   'filters[app.release_stage][][value]': 'production'
 };
 
-api(`https://api.bugsnag.com/projects/${process.env.PROJECT_ID}/errors`, filterParams)
+bugsnag.errors(process.env.PROJECT_ID, filters)
   .then((errors) => {
-    const req = errors.map((error) => api(`https://api.bugsnag.com/errors/${error.id}/events`));
+    const req = errors.map((error) => bugsnag.events(error.id, filters));
     return Promise.all(req);
   })
   .then((events) => {
-    const req = _.flatten(events).map((event) => api(event.url));
+    const req = _.flatten(events).map((event) => bugsnag.get(event.url));
     return Promise.all(req);
   })
   .then((details) => {
