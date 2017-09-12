@@ -29,5 +29,8 @@ module.exports = {
   },
   events: function(errorId, filters) {
     return this.get(`https://api.bugsnag.com/errors/${errorId}/events`, filters);
+  },
+  project: function(projectId) {
+    return this.get(`https://api.bugsnag.com/projects/${projectId}`);
   }
 };

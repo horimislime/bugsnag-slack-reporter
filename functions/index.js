@@ -57,7 +57,7 @@ bugsnag.errors(process.env.PROJECT_ID, filters)
       .reverse()
       .map((user) => `${user}: ${userGroups[user].length}`)
       .join('\n');
-    slack.send(`*Crashes by users* \`\`\`${users}\`\`\``);
+    slack.send(`*Crashes by user* \`\`\`${users}\`\`\``);
 
     versionGroups['13.0'] = [1, 2, 3, 4, 5, 6, 7];
     versionGroups['14.0'] = [1, 2, 3, 4, 5];
@@ -65,5 +65,11 @@ bugsnag.errors(process.env.PROJECT_ID, filters)
       .reverse()
       .map((ver) => `${ver}: ${versionGroups[ver].length}`)
       .join('\n');
-    slack.send(`*Crashes by versions* \`\`\`${versions}\`\`\``);
+    slack.send(`*Crashes by version* \`\`\`${versions}\`\`\``);
+
+    bugsnag.project(process.env.PROJECT_ID)
+      .then((project) => {
+        const filterParam = _.toPairs(filters).map((pair) => pair.join('=')).join('&');
+        slack.send(`For more information:\n${project.html_url}/errors?${filterParam}`);
+      });
   });
