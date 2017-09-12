@@ -25,22 +25,6 @@ const _ = require('lodash');
 const api = require('./bugsnag.js');
 require('dotenv').config();
 
-Object.defineProperty(Array.prototype, 'group', {
-  enumerable: false,
-  value: (key) => {
-    let map = {};
-    this.map(e => ({k: key(e), d: e})).forEach(e => {
-      map[e.k] = map[e.k] || [];
-      map[e.k].push(e.d);
-    });
-    return Object.keys(map).map((k) => ({key: k, data: map[k]}));
-  }
-});
-
-const flatten = (arr) => {
-  return Array.prototype.concat(...arr);
-};
-
 const filterParams = {
   'filters[event.since][][type]': 'eq',
   'filters[event.since][][value]': '2d',
@@ -58,17 +42,17 @@ api(`https://api.bugsnag.com/projects/${process.env.PROJECT_ID}/errors`, filterP
     return Promise.all(req);
   })
   .then((events) => {
-    const req = flatten(events).map((event) => api(event.url));
+    const req = _.flatten(events).map((event) => api(event.url));
     return Promise.all(req);
   })
   .then((details) => {
-    details.forEach((detail) => {
-      console.log(detail.user.name);
-    });
+    const userGroups = _.groupBy(details, (detail) => detail.user.name);
+    const versionGroups = _.groupBy(details, (detail) => detail.app.version);
 
-    const restaurantGroups = details.group((detail) => detail.user.id);
-    const versionGroups = details.group((detail) => detail.app.version);
-
-    console.log(`restaurant group count = ${restaurantGroups.length}`);
-    console.log(`version group count = ${versionGroups.length}`);
+    for (const key in userGroups) {
+      console.log(`${key}: ${userGroups[key].length}`);
+    }
+    for (const key in versionGroups) {
+      console.log(`ver ${key}: ${versionGroups[key].length}`);
+    }
   });
