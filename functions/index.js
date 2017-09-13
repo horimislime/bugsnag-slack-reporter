@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const filters = {
   'filters[event.since][][type]': 'eq',
-  'filters[event.since][][value]': '3d',
+  'filters[event.since][][value]': '1d',
   'filters[error.status][][type]': 'eq',
   'filters[error.status][][value]': 'open',
   'filters[event.severity][][type]': 'eq',
