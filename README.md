@@ -27,7 +27,7 @@ Run the following commands to deploy AppEngine app and functions to Firebase.
 ```
 
 # Confirm it works
-- See [Stackdriver](https://console.cloud.google.com/logs/viewer) to ensure that `/publish/daily-tick` successfully completed.
+- See [Stackdriver](https://console.cloud.google.com/logs/viewer) to ensure that `/publish/daily-tick` is successfully completed.
 - To confirm functions are working,  see functions logs (https://console.firebase.google.com/u/1/project/[firebase_project_id]/functions/logs).
 
 # License
