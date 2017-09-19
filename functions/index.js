@@ -29,8 +29,13 @@ exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
       return Promise.all(req);
     })
     .then((details) => {
-      const userGroups = _.groupBy(details, (detail) => detail.user.name);
-      const versionGroups = _.groupBy(details, (detail) => detail.app.version);
+
+      const userGroups = _.groupBy(details, (detail) => {
+        return detail.user === undefined ? 'Unknown' : detail.user.name;
+      });
+      const versionGroups = _.groupBy(details, (detail) => {
+        return detail.app === undefined ? 'Unknown' : detail.app.version;
+      });
 
       let message = ':fire: Total number of crashes on yesterday :fire:\n\n\n';
 
@@ -58,6 +63,7 @@ exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
 
       bugsnag.project(process.env.PROJECT_ID)
         .then((project) => {
+          console.log(project);
           const filterParam = _.toPairs(filters).map((pair) => pair.join('=')).join('&');
           message += `:sleuth_or_spy: *More detail*\n${project.html_url}/errors?${filterParam}`;
           slack.send(message);
