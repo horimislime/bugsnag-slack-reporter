@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const functions = require('firebase-functions');
+const Promise = require('bluebird');
 const bugsnag = require('./bugsnag.js');
 const slack = require('./slack.js');
 require('dotenv').config();
@@ -20,16 +21,10 @@ const filters = {
 exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
   console.log('Job started.');
   bugsnag.errors(process.env.PROJECT_ID, filters)
-    .then((errors) => {
-      const req = errors.map((error) => bugsnag.events(error.id, filters));
-      return Promise.all(req);
-    })
     .then((events) => {
-      const req = _.flatten(events).map((event) => bugsnag.get(event.url));
-      return Promise.all(req);
+      return Promise.resolve(_.flatten(events)).mapSeries((event) => bugsnag.get(event.url));
     })
     .then((details) => {
-
       const userGroups = _.groupBy(details, (detail) => {
         return detail.user === undefined ? 'Unknown' : detail.user.name;
       });
