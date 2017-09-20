@@ -1,27 +1,32 @@
 'use strict';
 
+const Promise = require('bluebird');
 const request = require('request');
 require('dotenv').config();
 
 module.exports = {
   get: (url, params) => {
     return new Promise((resolve, reject) => {
-      request.get({
-        url: url,
-        headers: {
-          Authorization: `token ${process.env.AUTH_TOKEN}`,
-          'X-Version': 2
-        },
-        qs: params,
-        json: true
-      }, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else {
-          console.log(`success. href = ${response.request.href}`);
-          resolve(body);
-        }
-      });
+      setTimeout(function() {
+        console.log(`url = ${url}`);
+        request.get({
+          url: url,
+          headers: {
+            Authorization: `token ${process.env.AUTH_TOKEN}`,
+            'X-Version': 2
+          },
+          qs: params,
+          json: true
+        }, (error, response, body) => {
+          if (error) {
+            console.log(error);
+            reject(error);
+          } else {
+            console.log('request success.');
+            resolve(body);
+          }
+        });
+      }, 1 * 1000);
     });
   },
   errors: function(projectId, filters) {

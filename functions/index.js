@@ -2,13 +2,14 @@
 
 const _ = require('lodash');
 const functions = require('firebase-functions');
+const Promise = require('bluebird');
 const bugsnag = require('./bugsnag.js');
 const slack = require('./slack.js');
 require('dotenv').config();
 
 const filters = {
   'filters[event.since][][type]': 'eq',
-  'filters[event.since][][value]': '1d',
+  'filters[event.since][][value]': '3h',
   'filters[error.status][][type]': 'eq',
   'filters[error.status][][value]': 'open',
   'filters[event.severity][][type]': 'eq',
@@ -17,20 +18,21 @@ const filters = {
   'filters[app.release_stage][][value]': 'production'
 };
 
-exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
+// exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
   console.log('Job started.');
   bugsnag.errors(process.env.PROJECT_ID, filters)
     .then((errors) => {
-      const req = errors.map((error) => bugsnag.events(error.id, filters));
-      return Promise.all(req);
+      return Promise.each(errors, (error) => bugsnag.events(error.id, filters));
     })
     .then((events) => {
-      const req = _.flatten(events).map((event) => bugsnag.get(event.url));
-      return Promise.all(req);
+      // console.log(events[0]);
+      return Promise.each(_.flatten(events), (event) => bugsnag.get(event.url))
     })
     .then((details) => {
-
+      console.log('🎉🎉🎉');
+      console.log(details[0]);
       const userGroups = _.groupBy(details, (detail) => {
+        console.log(detail);
         return detail.user === undefined ? 'Unknown' : detail.user.name;
       });
       const versionGroups = _.groupBy(details, (detail) => {
@@ -66,7 +68,11 @@ exports.daily_job = functions.pubsub.topic('daily-tick').onPublish(() => {
           console.log(project);
           const filterParam = _.toPairs(filters).map((pair) => pair.join('=')).join('&');
           message += `:sleuth_or_spy: *More detail*\n${project.html_url}/errors?${filterParam}`;
-          slack.send(message);
+          // slack.send(message);
+          console.log(message);
         });
+    }).catch(function(e) {
+      console.log('error');
+      console.log(e);
     });
-});
+// });
